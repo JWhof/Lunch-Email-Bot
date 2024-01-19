@@ -1,0 +1,2 @@
+class NoLunchFoundError(Exception):
+    pass
