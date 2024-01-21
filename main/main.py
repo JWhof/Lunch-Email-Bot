@@ -1,7 +1,7 @@
 import datetime
-import no_lunch_found
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+import no_lunch_found
 
 
 use_override_date = True
@@ -13,7 +13,7 @@ def main():
     SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
     creds = Credentials.from_authorized_user_file("secret/token.json", SCOPES)
     service = build("calendar", "v3", credentials=creds)
-    now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+    now = datetime.datetime.utcnow().isoformat() + "Z"
     events_result = (
         service.events()
         .list(
