@@ -3,6 +3,7 @@ import no_lunch_found
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
+
 use_override_date = True
 override_date = "2024-01-22"
 
@@ -52,7 +53,6 @@ def retrieve_correct_day_info() -> None:
 def create_lunch_items_dict() -> None:
     """Separates the items from lunch_items_list into keys and values in lunch_items dict. 
     Includes a try except if vegetarian hot lunch is not available."""
-
 
     global lunch_items_dict
     lunch_items_dict = {}
