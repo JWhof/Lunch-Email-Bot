@@ -5,7 +5,7 @@ import no_lunch_found
 
 
 use_override_date = True
-override_date = "2024-01-22"
+override_date = "2024-01-23"
 
 def main():
     global events
@@ -13,7 +13,7 @@ def main():
     SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
     creds = Credentials.from_authorized_user_file("secret/token.json", SCOPES)
     service = build("calendar", "v3", credentials=creds)
-    now = datetime.datetime.utcnow().isoformat() + "Z"
+    now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
     events_result = (
         service.events()
         .list(
