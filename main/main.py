@@ -1,5 +1,5 @@
 from datetime import datetime
-import dateutil.parser
+import requests
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import no_lunch_found
@@ -7,6 +7,9 @@ import re
 
 use_override_date = True
 override_date = "2024-03-28"
+API_KEY = open("secret/mailgun_api_key.txt", "r").read()
+DOMAIN_NAME = "sandbox9f74cd3c9c8943feaba6c15f177944d0.mailgun.org"
+USER_LIST = ["jwesterhof@ash.nl"]
 
 class LunchBot:
     def __init__(self):
@@ -14,6 +17,8 @@ class LunchBot:
         self.event_day = None
         self.lunch_items_list = []
         self.lunch_items_dict = {}
+        self.api_key = API_KEY
+        self.domain_name = DOMAIN_NAME
 
     def setup(self):
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
@@ -67,13 +72,22 @@ class LunchBot:
             self.lunch_items_dict["Veg Lunch"] = re.sub(veg_lunch_regex_pattern, '', self.lunch_items_list[3], count=1)
     
     def is_day_monday(self) -> bool:
+        """Returns if the day is monday or not."""
         date_obj = datetime.strptime(self.event_day, "%Y-%m-%d")
         self.weekday = date_obj.weekday()
         return self.weekday == 0
 
-bot = LunchBot()
+    def send_email(self) -> int:
+        return requests.post(
+		f"https://api.mailgun.net/v3/{self.domain_name}/messages",
+		auth=("api", f"{self.api_key}"),
+		data={"from": f"Lunch Menu Bot<lunch@{self.domain_name}>",
+			"to": USER_LIST,
+			"subject": f"{self.lunch_items_dict['Lunch']}, {self.lunch_items_dict['Snack']}, {self.lunch_items_dict['Soups']}",
+			"text": "Test"}).status_code
 
+bot = LunchBot()
 bot.setup()
 bot.retrieve_day_info()
 bot.init_menu_dict()
-print(bot.lunch_items_dict)
+print(bot.send_email())

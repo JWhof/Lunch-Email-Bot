@@ -1,5 +1,5 @@
 datetime
-python-dateutil
+requests
 no_lunch_found
 google-auth
 google-auth-oauthlib
