@@ -1,11 +1,14 @@
 import datetime
+import dateutil.parser
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import no_lunch_found
-
+import re
 
 use_override_date = True
-override_date = "2024-01-23"
+override_date = "2024-03-28"
+
+
 
 def main():
     global events
@@ -28,6 +31,8 @@ def main():
     events = events_result.get("items", [])
 
 
+
+
 def retrieve_correct_day_info() -> None:
     """Retrieves the current day/override day's lunch menu and stores it in lunch_items list. 
     Throws NoLunchFoundError if there is no lunch available on that day (likely a weekend/holiday)."""
@@ -46,30 +51,42 @@ def retrieve_correct_day_info() -> None:
                 lunch_items_list = [line for line in event["description"].split("\n") if line != ""]
     lunch_items_list = [lunch_item.strip() for lunch_item in lunch_items_list]
 
+    print(lunch_items_list)
+
     if lunch_items_list == []:
         raise no_lunch_found.NoLunchFoundError("No lunch could be found for this date.")
         
 
-def create_lunch_items_dict() -> None:
+def create_lunch_items_dict(day) -> None:
     """Separates the items from lunch_items_list into keys and values in lunch_items dict. 
     Includes a try except if vegetarian hot lunch is not available."""
 
     global lunch_items_dict
     lunch_items_dict = {}
 
-    lunch_items_dict["Soups"] = [lunch_item.strip() for lunch_item in lunch_items_list if "soup" in lunch_item.lower() and "soups" not in lunch_item.lower()]
-    lunch_items_dict["Snack"] = lunch_items_list[next(i for i,v in enumerate(lunch_items_list) if v.lower() == 'hot snacks') + 1]
-    lunch_items_dict["Lunch"] = lunch_items_list[next(i for i,v in enumerate(lunch_items_list) if v.lower() == 'hot lunch') + 1]
+    soup_regex_pattern = r'\b[sS][oO][uU][pP][sS]\s*:?\s*'
+    snack_regex_pattern = r'\b[hH][oO][tT]\s+[sS][nN][aA][cC][kK][sS]?\s*:?\s*'
+    lunch_regex_pattern = r'\b[hH][oO][tT]\s+[lL][uU][nN][cC][hH]\s*:?\s*'
+
+    lunch_items_dict["Soups"] = re.sub(soup_regex_pattern, '', lunch_items_list[0], count=1)
+    lunch_items_dict["Snack"] = re.sub(snack_regex_pattern, '', lunch_items_list[1], count=1)
+    lunch_items_dict["Lunch"] = re.sub(lunch_regex_pattern, '', lunch_items_list[2], count=1)
     
-    try:
-        lunch_items_dict["Veg Lunch"] = lunch_items_list[next(i for i,v in enumerate(lunch_items_list) if v.lower() == 'hot lunch (v)') + 1]
-    except StopIteration:
-        print("retrieved day is monday")
+    if is_day_monday(day):
+        print("day is monday")
+    else:
+        print("day is not monday")
 
     print(lunch_items_dict)
+    
+
+def is_day_monday(day) -> bool:
+    event_day = dateutil.parser.parse(day)
+    day_of_week = event_day.weekday()
+    if day_of_week == 0:
+        return True
+    return False
 
 
 if __name__ == "__main__":
     main()
-    retrieve_correct_day_info()
-    create_lunch_items_dict()
