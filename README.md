@@ -1,1 +1,1 @@
-# EE-Chess-Bot
+# Lunch-Bot
