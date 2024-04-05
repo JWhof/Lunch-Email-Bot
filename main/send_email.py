@@ -2,7 +2,7 @@ import requests
 
 api_key = open("secret/mailgun_api_key.txt", "r").read()
 
-domain_name = "sandbox9f74cd3c9c8943feaba6c15f177944d0.mailgun.org"
+domain_name = "menu.bot.nu"
 
 def send_simple_message():
 	return requests.post(
