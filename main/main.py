@@ -2,11 +2,11 @@ from datetime import datetime
 import requests
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-import no_lunch_found
+import errors
 import re
 
 use_override_date = True
-override_date = "2024-03-28"
+override_date = "2024-04-09"
 API_KEY = open("secret/mailgun_api_key.txt", "r").read()
 DOMAIN_NAME = "sandbox9f74cd3c9c8943feaba6c15f177944d0.mailgun.org"
 USER_LIST = ["jwesterhof@ash.nl"]
@@ -41,11 +41,17 @@ class LunchBot:
     def retrieve_day_info(self) -> None:
         """Retrieves the current day/override day's lunch menu and stores it in lunch_items list. 
     Throws NoLunchFoundError if there is no lunch available on that day (likely a weekend/holiday)."""
+        section_keywords = ['soups', 'hot snacks', 'hot lunch', 'hot lunch \(v\)']
+        pattern = '|'.join([f'(?i)\\b{s}\\b' for s in section_keywords])
+
+
         if use_override_date:
             for event in self.events:
                 if str(event["start"].get("dateTime", event["start"].get("date"))) == override_date and "ES" not in event["summary"]:
                     self.event_day = str(event["start"].get("dateTime", event["start"].get("date")))
-                    self.lunch_items_list = [line for line in event["description"].split("\n") if line != ""]
+                    sections = re.split(f'({pattern})', event["description"], flags=re.IGNORECASE)
+                    sections = [section.strip() for section in sections if section.strip()]
+                    self.lunch_items_list = [sections[i] + ' ' + sections[i + 1] for i in range(0, len(sections), 2)]
         else:
             for event in self.events:
                 if str(event["start"].get("dateTime", event["start"].get("date"))) == str(datetime.utcnow().isoformat(timespec="hours").split("T")[0]) and "ES" not in event["summary"]:
@@ -54,7 +60,9 @@ class LunchBot:
         self.lunch_items_list = [lunch_item.strip() for lunch_item in self.lunch_items_list]
 
         if self.lunch_items_list == []:
-            raise no_lunch_found.NoLunchFoundError("No lunch could be found for this date.")
+            raise errors.NoLunchFoundError("No lunch could be found for this date.")
+
+        print(self.lunch_items_list)
     
     def init_menu_dict(self) -> None:
         """Separates the items from lunch_items_list into keys and values in lunch_items dict. 
@@ -83,11 +91,17 @@ class LunchBot:
 		auth=("api", f"{self.api_key}"),
 		data={"from": f"Lunch Menu Bot<lunch@{self.domain_name}>",
 			"to": USER_LIST,
-			"subject": f"{self.lunch_items_dict['Lunch']}, {self.lunch_items_dict['Snack']}, {self.lunch_items_dict['Soups']}",
+			"subject": f"{self.lunch_items_dict['Lunch']}, {self.lunch_items_dict['Snack'].lower()}, {self.lunch_items_dict['Soups'].lower()}",
 			"text": "Test"}).status_code
+    
+    def debug_info(self) -> None:
+        print(f"Lunch: {self.lunch_items_dict['Lunch']}")
+        print(f"Snack: {self.lunch_items_dict['Snack']}")
+        print(f"Soups: {self.lunch_items_dict['Soups']}")
 
 bot = LunchBot()
 bot.setup()
 bot.retrieve_day_info()
 bot.init_menu_dict()
 print(bot.send_email())
+bot.debug_info()
