@@ -4,13 +4,15 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import errors
 import re
+import cronitor
 
 use_override_date = True
 override_date = "2024-04-09"
-API_KEY = open("secret/mailgun_api_key.txt", "r").read()
+MAILGUN_API_KEY = open("secret/mailgun_api_key.txt", "r").read()
+cronitor.api_key = open("secret/cronitor_api_key.txt", "r").read()
 
 # TODO: make this a real domain name that send authed emails --> DNS verification in progress
-DOMAIN_NAME = "menu.bot.nu"
+DOMAIN_NAME = "sandbox9f74cd3c9c8943feaba6c15f177944d0.mailgun.org"
 
 class LunchBot:
     def __init__(self):
@@ -18,7 +20,7 @@ class LunchBot:
         self.event_day = None
         self.lunch_items_list = []
         self.lunch_items_dict = {}
-        self.api_key = API_KEY
+        self.api_key = MAILGUN_API_KEY
         self.domain_name = DOMAIN_NAME
         self.user_list = ""
 
@@ -117,8 +119,9 @@ class LunchBot:
             .get(spreadsheetId=SPREADSHEET_ID, range=SPREADSHEET_RANGE)
             .execute()
         )
-        self.user_list = ", ".join([row[1] for row in result.get("values", [])])
+        self.user_list = [row[1] for row in result.get("values", [])]
 
+# TODO: figure out how to run this on crontab
 
 def main():
     bot = LunchBot()
