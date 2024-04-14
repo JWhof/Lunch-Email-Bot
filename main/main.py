@@ -6,13 +6,13 @@ import errors
 import re
 import cronitor
 
-use_override_date = True
-override_date = "2024-04-09"
+use_override_date = False
+override_date = "2024-04-15"
 MAILGUN_API_KEY = open("secret/mailgun_api_key.txt", "r").read()
 cronitor.api_key = open("secret/cronitor_api_key.txt", "r").read()
 
 # TODO: make this a real domain name that send authed emails --> DNS verification in progress
-DOMAIN_NAME = "sandbox9f74cd3c9c8943feaba6c15f177944d0.mailgun.org"
+DOMAIN_NAME = "menu.bot.nu"
 
 class LunchBot:
     def __init__(self):
@@ -46,7 +46,7 @@ class LunchBot:
         """Retrieves the current day/override day's lunch menu and stores it in lunch_items list. 
     Throws NoLunchFoundError if there is no lunch available on that day (likely a weekend/holiday)."""
         section_keywords = ['soups', 'hot snacks', 'hot lunch', 'hot lunch \(v\)']
-        pattern = '|'.join([f'(?i)\\b{s}\\b' for s in section_keywords])
+        pattern = '|'.join([f'\\b{s}\\b' for s in section_keywords])
 
         if use_override_date:
             for event in self.events:
